@@ -70,6 +70,23 @@ function initProAnnotator() {
     .ic-download { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'%3E%3C/path%3E%3Cpolyline points='7 10 12 15 17 10'%3E%3C/polyline%3E%3Cline x1='12' y1='15' x2='12' y2='3'%3E%3C/line%3E%3C/svg%3E"); }
     .ic-upload { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'%3E%3C/path%3E%3Cpolyline points='17 8 12 3 7 8'%3E%3C/polyline%3E%3Cline x1='12' y1='3' x2='12' y2='15'%3E%3C/line%3E%3C/svg%3E"); }
     .ic-translate { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8l6 6'%3E%3C/path%3E%3Cpath d='M4 14l6-6 2-3'%3E%3C/path%3E%3Cpath d='M2 5h12'%3E%3C/path%3E%3Cpath d='M7 2h1'%3E%3C/path%3E%3Cpath d='M22 22l-5-10-5 10'%3E%3C/path%3E%3Cpath d='M14 18h6'%3E%3C/path%3E%3C/svg%3E"); }
+    .ic-chevron { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+
+    /* DROPDOWN UI STYLES */
+    .annotator-dropdown-container { position: relative; display: flex; align-items: center; }
+    .annotator-dropdown-menu {
+      display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 8px;
+      background: #202223; border: 1px solid #454f59; border-radius: 8px; padding: 6px;
+      flex-direction: column; gap: 4px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      min-width: 150px;
+    }
+    
+    /* INVISIBLE HOVER BRIDGE - Fixes the dropdown gap deadzone */
+    .annotator-dropdown-menu::after {
+      content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 16px; background: transparent;
+    }
+    
+    .annotator-dropdown-container:hover .annotator-dropdown-menu { display: flex; }
 
     .annotator-tool-btn { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: transparent; border: none; border-radius: 6px; color: #a6acb2; font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
     .annotator-tool-btn:hover { background: #31373d; color: #ffffff; }
@@ -313,33 +330,31 @@ function initProAnnotator() {
 
   const toolbar = document.createElement('div');
   toolbar.id = 'annotator-toolbar';
-  toolbar.style.cssText = `position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 2147483647; background: #202223; padding: 12px 16px; border-radius: 12px; box-shadow: 0 16px 32px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; border: 1px solid #454f59; flex-wrap: nowrap;`;
+  toolbar.style.cssText = `position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); transform-origin: bottom center; z-index: 2147483647; background: #202223; padding: 12px 16px; border-radius: 12px; box-shadow: 0 16px 32px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; border: 1px solid #454f59; flex-wrap: nowrap;`;
 
   toolbar.innerHTML = `
-    <button class="annotator-tool-btn" id="tool-box"><i class="ic ic-box"></i> Box</button>
-    <button class="annotator-tool-btn" id="tool-text"><i class="ic ic-text"></i> Text</button>
-    
-    <div style="position: relative; display: flex;" id="tooltip-wrapper">
-      <button class="annotator-tool-btn" id="tool-tooltip"><i class="ic ic-tooltip"></i> Tooltip</button>
-      <div id="tooltip-submenu" style="display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; background: #202223; border: 1px solid #454f59; border-radius: 8px; padding: 6px; flex-direction: column; gap: 4px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-        <button class="annotator-tool-btn tooltip-opt" data-pos="top">Top Arrow</button>
-        <button class="annotator-tool-btn tooltip-opt" data-pos="bottom">Bottom Arrow</button>
-        <button class="annotator-tool-btn tooltip-opt" data-pos="left">Left Arrow</button>
-        <button class="annotator-tool-btn tooltip-opt" data-pos="right">Right Arrow</button>
+    <div class="annotator-dropdown-container">
+      <button class="annotator-tool-btn"><i class="ic ic-box"></i> Insert <i class="ic ic-chevron" style="width:12px; height:12px;"></i></button>
+      <div class="annotator-dropdown-menu">
+        <button class="annotator-tool-btn" id="tool-box"><i class="ic ic-box"></i> Box</button>
+        <button class="annotator-tool-btn" id="tool-text"><i class="ic ic-text"></i> Text</button>
+        <button class="annotator-tool-btn" id="tool-tooltip"><i class="ic ic-tooltip"></i> Tooltip</button>
+        <button class="annotator-tool-btn" id="tool-arrow"><i class="ic ic-arrow"></i> Arrow</button>
+        <button class="annotator-tool-btn" id="tool-redact"><i class="ic ic-redact"></i> Redact</button>
+        <button class="annotator-tool-btn" id="tool-spotlight"><i class="ic ic-spotlight"></i> Focus</button>
+        <button class="annotator-tool-btn" id="tool-badge"><i class="ic ic-badge"></i> Badge</button>
       </div>
     </div>
     
-    <button class="annotator-tool-btn" id="tool-arrow"><i class="ic ic-arrow"></i> Arrow</button>
-    <button class="annotator-tool-btn" id="tool-redact"><i class="ic ic-redact"></i> Redact</button>
-    <button class="annotator-tool-btn" id="tool-spotlight"><i class="ic ic-spotlight"></i> Focus</button>
-    <button class="annotator-tool-btn" id="tool-badge" title="Auto-numbers"><i class="ic ic-badge"></i> Badge</button>
-    <button class="annotator-tool-btn" id="tool-crop" style="color: #008060;" title="Select Export Area"><i class="ic ic-crop"></i> Crop</button>
-    
-    <div style="width: 1px; height: 24px; background: #454f59; margin: 0 4px;"></div>
-    
-    <button class="annotator-tool-btn" id="tool-load-tpl" title="Load Template"><i class="ic ic-upload"></i></button>
-    <button class="annotator-tool-btn" id="tool-save-tpl" title="Save as Template"><i class="ic ic-download"></i></button>
-    <button class="annotator-tool-btn" id="tool-clear" style="color: #e77674;" title="Clear Canvas"><i class="ic ic-trash"></i></button>
+    <div class="annotator-dropdown-container">
+      <button class="annotator-tool-btn"><i class="ic ic-crop"></i> Canvas <i class="ic ic-chevron" style="width:12px; height:12px;"></i></button>
+      <div class="annotator-dropdown-menu">
+        <button class="annotator-tool-btn" id="tool-crop" style="color: #008060;"><i class="ic ic-crop"></i> Select Export Area</button>
+        <button class="annotator-tool-btn" id="tool-load-tpl"><i class="ic ic-upload"></i> Load Template</button>
+        <button class="annotator-tool-btn" id="tool-save-tpl"><i class="ic ic-download"></i> Save as Template</button>
+        <button class="annotator-tool-btn" id="tool-clear" style="color: #e77674;"><i class="ic ic-trash"></i> Clear All</button>
+      </div>
+    </div>
 
     <div style="width: 1px; height: 24px; background: #454f59; margin: 0 4px;"></div>
     
@@ -348,7 +363,7 @@ function initProAnnotator() {
       
       <div style="display: none; align-items: center; gap: 6px; background: rgba(0, 128, 96, 0.1); padding: 4px 6px; border-radius: 6px; border: 1px solid rgba(0, 128, 96, 0.3);" id="translation-container">
         <i class="ic ic-translate" style="color: #008060;"></i>
-        <select id="prop-translate-lang" class="annotator-input" style="width: 90px; padding: 2px 4px;">
+        <select id="prop-translate-lang" class="annotator-input" style="width: 85px; padding: 2px 4px;">
            <option value="es">Spanish</option>
            <option value="fr">French</option>
            <option value="de">German</option>
@@ -386,11 +401,26 @@ function initProAnnotator() {
       <div style="width: 1px; height: 24px; background: #454f59; margin: 0 4px;"></div>
     </div>
     
-    <button class="annotator-btn-cancel" id="tool-exit"><i class="ic ic-exit"></i> Exit</button>
-    <button class="annotator-btn-secondary" id="tool-copy"><i class="ic ic-copy"></i> Copy</button>
-    <button class="annotator-btn-primary" id="tool-save"><i class="ic ic-save"></i> Save</button>
+    <button class="annotator-btn-cancel" id="tool-exit">Exit</button>
+    <button class="annotator-btn-secondary" id="tool-copy">Copy</button>
+    <button class="annotator-btn-primary" id="tool-save">Save</button>
   `;
   document.documentElement.appendChild(toolbar);
+
+  // --- ANTI-ZOOM ENGINE (Ensures Toolbar Stays 100% Size) ---
+  const adjustToolbarScale = () => {
+    const bar = document.getElementById('annotator-toolbar');
+    if (!bar) return;
+    let zoomLevel = window.outerWidth / window.innerWidth;
+    if (zoomLevel < 0.25) zoomLevel = 0.25;
+    if (zoomLevel > 5) zoomLevel = 5;
+    const inverseScale = 1 / zoomLevel;
+    bar.style.transform = `translateX(-50%) scale(${inverseScale})`;
+  };
+
+  window.addEventListener('resize', adjustToolbarScale);
+  adjustToolbarScale();
+
 
   canvas.on('object:scaling', function(e) {
     const obj = e.target;
@@ -426,34 +456,16 @@ function initProAnnotator() {
     canvas.add(text); canvas.setActiveObject(text);
   });
 
-  const tooltipBtn = document.getElementById('tool-tooltip');
-  const tooltipSubmenu = document.getElementById('tooltip-submenu');
-
-  tooltipBtn.addEventListener('click', () => {
-    tooltipSubmenu.style.display = tooltipSubmenu.style.display === 'none' ? 'flex' : 'none';
-  });
-
-  document.querySelectorAll('.tooltip-opt').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const arrowPos = e.target.getAttribute('data-pos');
-      tooltipSubmenu.style.display = 'none'; 
-
-      const s = window.annotatorAppState.tooltip;
-      s.arrowPosition = arrowPos; 
-      
-      const tooltip = new AnnotatorText('Tooltip instruction...', {
-        left: centerLeft - 100, top: centerTop, fontFamily: '-apple-system, sans-serif', fill: s.textColor,
-        backgroundColor: hexToRgba(s.fill, s.fillOpacity), annotatorBorderColor: s.border, annotatorBorderWidth: s.borderWidth,
-        annotatorBorderDash: s.style === 'dashed' ? [6,6] : null, fontSize: 15, customPadding: 12, rx: s.radius, showArrow: true, 
-        arrowPosition: arrowPos, cornerColor: '#008060', transparentCorners: false, width: 200,
-        annotatorType: 'tooltip', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity, annotatorBorder: s.border, annotatorBorderWidth: s.borderWidth, annotatorTextColor: s.textColor
-      });
-      canvas.add(tooltip); canvas.setActiveObject(tooltip);
+  document.getElementById('tool-tooltip').addEventListener('click', () => {
+    const s = window.annotatorAppState.tooltip;
+    const tooltip = new AnnotatorText('Tooltip instruction...', {
+      left: centerLeft - 100, top: centerTop, fontFamily: '-apple-system, sans-serif', fill: s.textColor,
+      backgroundColor: hexToRgba(s.fill, s.fillOpacity), annotatorBorderColor: s.border, annotatorBorderWidth: s.borderWidth,
+      annotatorBorderDash: s.style === 'dashed' ? [6,6] : null, fontSize: 15, customPadding: 12, rx: s.radius, showArrow: true, 
+      arrowPosition: s.arrowPosition, cornerColor: '#008060', transparentCorners: false, width: 200,
+      annotatorType: 'tooltip', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity, annotatorBorder: s.border, annotatorBorderWidth: s.borderWidth, annotatorTextColor: s.textColor
     });
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!document.getElementById('tooltip-wrapper').contains(e.target)) { tooltipSubmenu.style.display = 'none'; }
+    canvas.add(tooltip); canvas.setActiveObject(tooltip);
   });
 
   document.getElementById('tool-arrow').addEventListener('click', () => {
@@ -778,7 +790,7 @@ function initProAnnotator() {
             navigator.clipboard.write([item]).then(() => {
               const copyBtn = document.getElementById('tool-copy');
               const originalHtml = copyBtn.innerHTML;
-              copyBtn.innerHTML = `<i class="ic ic-copy"></i> Copied!`;
+              copyBtn.innerHTML = `Copied!`;
               setTimeout(() => { copyBtn.innerHTML = originalHtml; }, 2000);
             }).catch(err => {
               console.error("Clipboard copy failed", err);
@@ -793,7 +805,7 @@ function initProAnnotator() {
 
   // --- 7. Save, Copy, and Exit Actions ---
   document.getElementById('tool-exit').addEventListener('click', () => {
-    document.getElementById('annotator-canvas-container')?.remove(); document.getElementById('annotator-toolbar')?.remove(); document.body.style.overflow = ''; window.isProAnnotatorActive = false;
+    document.getElementById('annotator-canvas-container')?.remove(); document.getElementById('annotator-toolbar')?.remove(); document.body.style.overflow = ''; window.isProAnnotatorActive = false; window.removeEventListener('resize', adjustToolbarScale);
   });
 
   const triggerImageCapture = (actionType) => {
