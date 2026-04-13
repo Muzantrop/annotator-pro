@@ -5,7 +5,7 @@ if (!window.isProAnnotatorActive) {
   const defaultState = {
     box: { fill: '#005bd3', fillOpacity: 0, border: '#005bd3', borderWidth: 3, radius: 4, style: 'solid' },
     text: { fill: '#202223', fillOpacity: 1, border: '#ffffff', borderWidth: 0, radius: 6, style: 'solid', textColor: '#ffffff' },
-    tooltip: { fill: '#005bd3', fillOpacity: 1, border: '#ffffff', borderWidth: 0, radius: 8, style: 'solid', textColor: '#ffffff' },
+    tooltip: { fill: '#005bd3', fillOpacity: 1, border: '#ffffff', borderWidth: 0, radius: 8, style: 'solid', textColor: '#ffffff', arrowPosition: 'bottom' },
     arrow: { fill: '#005bd3', fillOpacity: 1 },
     redact: { fill: '#202223', fillOpacity: 1, border: '#000000', borderWidth: 0, radius: 4, style: 'solid' },
     badge: { fill: '#005bd3', fillOpacity: 1, border: '#ffffff', borderWidth: 0, style: 'solid', textColor: '#ffffff' },
@@ -67,6 +67,9 @@ function initProAnnotator() {
     .ic-save { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z'%3E%3C/path%3E%3Cpolyline points='17 21 17 13 7 13 7 21'%3E%3C/polyline%3E%3Cpolyline points='7 3 7 8 15 8'%3E%3C/polyline%3E%3C/svg%3E"); }
     .ic-exit { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E"); }
     .ic-copy { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2' ry='2'%3E%3C/rect%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'%3E%3C/path%3E%3C/svg%3E"); }
+    .ic-download { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'%3E%3C/path%3E%3Cpolyline points='7 10 12 15 17 10'%3E%3C/polyline%3E%3Cline x1='12' y1='15' x2='12' y2='3'%3E%3C/line%3E%3C/svg%3E"); }
+    .ic-upload { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'%3E%3C/path%3E%3Cpolyline points='17 8 12 3 7 8'%3E%3C/polyline%3E%3Cline x1='12' y1='3' x2='12' y2='15'%3E%3C/line%3E%3C/svg%3E"); }
+    .ic-translate { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8l6 6'%3E%3C/path%3E%3Cpath d='M4 14l6-6 2-3'%3E%3C/path%3E%3Cpath d='M2 5h12'%3E%3C/path%3E%3Cpath d='M7 2h1'%3E%3C/path%3E%3Cpath d='M22 22l-5-10-5 10'%3E%3C/path%3E%3Cpath d='M14 18h6'%3E%3C/path%3E%3C/svg%3E"); }
 
     .annotator-tool-btn { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: transparent; border: none; border-radius: 6px; color: #a6acb2; font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
     .annotator-tool-btn:hover { background: #31373d; color: #ffffff; }
@@ -144,6 +147,7 @@ function initProAnnotator() {
       options || (options = {}); options.padding = options.customPadding || 10; this.callSuper('initialize', text, options);
       this.set('rx', options.rx || 4); this.set('customPadding', options.customPadding || 10);
       this.set('showArrow', options.showArrow || false); this.set('arrowSize', options.arrowSize || 8);
+      this.set('arrowPosition', options.arrowPosition || 'bottom');
       this.set('annotatorBorderColor', options.annotatorBorderColor || '#000000'); this.set('annotatorBorderWidth', options.annotatorBorderWidth || 0);
       this.set('annotatorBorderDash', options.annotatorBorderDash || null); this.set('annotatorTextColor', options.annotatorTextColor || '#ffffff'); this.set('objectCaching', false); 
     },
@@ -151,10 +155,35 @@ function initProAnnotator() {
       if (!this.backgroundColor && !this.showArrow && this.annotatorBorderWidth === 0) return;
       const p = this.customPadding; const w = this.width + p * 2; const h = this.height + p * 2;
       const x = -this.width / 2 - p; const y = -this.height / 2 - p;
-      ctx.beginPath(); ctx.moveTo(x + this.rx, y); ctx.lineTo(x + w - this.rx, y); ctx.quadraticCurveTo(x + w, y, x + w, y + this.rx);
-      ctx.lineTo(x + w, y + h - this.rx); ctx.quadraticCurveTo(x + w, y + h, x + w - this.rx, y + h);
-      if (this.showArrow) { ctx.lineTo(this.arrowSize, y + h); ctx.lineTo(0, y + h + this.arrowSize); ctx.lineTo(-this.arrowSize, y + h); }
-      ctx.lineTo(x + this.rx, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - this.rx); ctx.lineTo(x, y + this.rx); ctx.quadraticCurveTo(x, y, x + this.rx, y); ctx.closePath();
+      const a = this.arrowSize;
+
+      ctx.beginPath();
+      ctx.moveTo(x + this.rx, y);
+      if (this.showArrow && this.arrowPosition === 'top') {
+        ctx.lineTo(-a, y); ctx.lineTo(0, y - a); ctx.lineTo(a, y);
+      }
+      ctx.lineTo(x + w - this.rx, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + this.rx);
+
+      if (this.showArrow && this.arrowPosition === 'right') {
+        ctx.lineTo(x + w, -a); ctx.lineTo(x + w + a, 0); ctx.lineTo(x + w, a);
+      }
+      ctx.lineTo(x + w, y + h - this.rx);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - this.rx, y + h);
+
+      if (this.showArrow && this.arrowPosition === 'bottom') {
+        ctx.lineTo(a, y + h); ctx.lineTo(0, y + h + a); ctx.lineTo(-a, y + h);
+      }
+      ctx.lineTo(x + this.rx, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - this.rx);
+
+      if (this.showArrow && this.arrowPosition === 'left') {
+        ctx.lineTo(x, a); ctx.lineTo(x - a, 0); ctx.lineTo(x, -a);
+      }
+      ctx.lineTo(x, y + this.rx);
+      ctx.quadraticCurveTo(x, y, x + this.rx, y);
+      
+      ctx.closePath();
       
       if (this.backgroundColor && this.backgroundColor !== 'transparent') { ctx.fillStyle = this.backgroundColor; ctx.fill(); }
       if (this.annotatorBorderWidth > 0) {
@@ -180,7 +209,30 @@ function initProAnnotator() {
     }
   });
 
-  // --- 3. Canvas & Enhanced Dark Toolbar ---
+  // --- REGISTER CUSTOM CLASSES FOR TEMPLATE LOADING ---
+  fabric.AnnotatorSpotlight = AnnotatorSpotlight;
+  fabric.AnnotatorSpotlight.fromObject = function(object, callback) {
+    callback && callback(new fabric.AnnotatorSpotlight(object));
+  };
+
+  fabric.AnnotatorBadge = AnnotatorBadge;
+  fabric.AnnotatorBadge.fromObject = function(object, callback) {
+    callback && callback(new fabric.AnnotatorBadge(object.text, object));
+  };
+
+  fabric.AnnotatorText = AnnotatorText;
+  fabric.AnnotatorText.fromObject = function(object, callback) {
+    callback && callback(new fabric.AnnotatorText(object.text, object));
+  };
+
+  fabric.AnnotatorArrow = AnnotatorArrow;
+  fabric.AnnotatorArrow.fromObject = function(object, callback) {
+    const points = [object.x1, object.y1, object.x2, object.y2];
+    callback && callback(new fabric.AnnotatorArrow(points, object));
+  };
+
+
+  // --- 3. Canvas & UI Generation ---
   const canvasContainer = document.createElement('div');
   canvasContainer.id = 'annotator-canvas-container';
   canvasContainer.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2147483646; cursor: crosshair;`;
@@ -193,6 +245,72 @@ function initProAnnotator() {
 
   const canvas = new fabric.Canvas('annotator-fabric-canvas', { selection: true });
 
+  const initSmartGuides = (canvas) => {
+    const snapZone = 8; 
+    const guideColor = '#008060'; 
+    let activeVLines = [];
+    let activeHLines = [];
+
+    canvas.on('object:moving', (e) => {
+      const movingObj = e.target;
+      const objs = canvas.getObjects().filter(o => o !== movingObj && o.annotatorType !== 'crop' && o.annotatorType !== 'spotlight');
+      
+      const movingBounds = movingObj.getBoundingRect();
+      activeVLines = [];
+      activeHLines = [];
+
+      const movingEdges = {
+        left: movingBounds.left, center: movingBounds.left + movingBounds.width / 2, right: movingBounds.left + movingBounds.width,
+        top: movingBounds.top, middle: movingBounds.top + movingBounds.height / 2, bottom: movingBounds.top + movingBounds.height
+      };
+
+      let closestX = { dist: Infinity, shift: 0, linePos: 0 };
+      let closestY = { dist: Infinity, shift: 0, linePos: 0 };
+
+      objs.forEach(targetObj => {
+        const targetBounds = targetObj.getBoundingRect();
+        const targetEdges = {
+          left: targetBounds.left, center: targetBounds.left + targetBounds.width / 2, right: targetBounds.left + targetBounds.width,
+          top: targetBounds.top, middle: targetBounds.top + targetBounds.height / 2, bottom: targetBounds.top + targetBounds.height
+        };
+
+        ['left', 'center', 'right'].forEach(movingKey => {
+          ['left', 'center', 'right'].forEach(targetKey => {
+            const dist = Math.abs(targetEdges[targetKey] - movingEdges[movingKey]);
+            if (dist < snapZone && dist < closestX.dist) {
+              closestX = { dist: dist, shift: targetEdges[targetKey] - movingEdges[movingKey], linePos: targetEdges[targetKey] };
+            }
+          });
+        });
+
+        ['top', 'middle', 'bottom'].forEach(movingKey => {
+          ['top', 'middle', 'bottom'].forEach(targetKey => {
+            const dist = Math.abs(targetEdges[targetKey] - movingEdges[movingKey]);
+            if (dist < snapZone && dist < closestY.dist) {
+              closestY = { dist: dist, shift: targetEdges[targetKey] - movingEdges[movingKey], linePos: targetEdges[targetKey] };
+            }
+          });
+        });
+      });
+
+      if (closestX.dist < snapZone) { movingObj.set('left', movingObj.left + closestX.shift); activeVLines.push(closestX.linePos); }
+      if (closestY.dist < snapZone) { movingObj.set('top', movingObj.top + closestY.shift); activeHLines.push(closestY.linePos); }
+    });
+
+    canvas.on('after:render', () => {
+      if (activeVLines.length === 0 && activeHLines.length === 0) return;
+      const ctx = canvas.getContext();
+      ctx.save(); ctx.strokeStyle = guideColor; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+      activeVLines.forEach(x => { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); });
+      activeHLines.forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); });
+      ctx.restore();
+    });
+
+    canvas.on('mouse:up', () => { activeVLines = []; activeHLines = []; canvas.renderAll(); });
+  };
+
+  initSmartGuides(canvas);
+
   const toolbar = document.createElement('div');
   toolbar.id = 'annotator-toolbar';
   toolbar.style.cssText = `position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 2147483647; background: #202223; padding: 12px 16px; border-radius: 12px; box-shadow: 0 16px 32px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; border: 1px solid #454f59; flex-wrap: nowrap;`;
@@ -200,19 +318,52 @@ function initProAnnotator() {
   toolbar.innerHTML = `
     <button class="annotator-tool-btn" id="tool-box"><i class="ic ic-box"></i> Box</button>
     <button class="annotator-tool-btn" id="tool-text"><i class="ic ic-text"></i> Text</button>
-    <button class="annotator-tool-btn" id="tool-tooltip"><i class="ic ic-tooltip"></i> Tooltip</button>
+    
+    <div style="position: relative; display: flex;" id="tooltip-wrapper">
+      <button class="annotator-tool-btn" id="tool-tooltip"><i class="ic ic-tooltip"></i> Tooltip</button>
+      <div id="tooltip-submenu" style="display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; background: #202223; border: 1px solid #454f59; border-radius: 8px; padding: 6px; flex-direction: column; gap: 4px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+        <button class="annotator-tool-btn tooltip-opt" data-pos="top">Top Arrow</button>
+        <button class="annotator-tool-btn tooltip-opt" data-pos="bottom">Bottom Arrow</button>
+        <button class="annotator-tool-btn tooltip-opt" data-pos="left">Left Arrow</button>
+        <button class="annotator-tool-btn tooltip-opt" data-pos="right">Right Arrow</button>
+      </div>
+    </div>
+    
     <button class="annotator-tool-btn" id="tool-arrow"><i class="ic ic-arrow"></i> Arrow</button>
     <button class="annotator-tool-btn" id="tool-redact"><i class="ic ic-redact"></i> Redact</button>
     <button class="annotator-tool-btn" id="tool-spotlight"><i class="ic ic-spotlight"></i> Focus</button>
-    <button class="annotator-tool-btn" id="tool-badge" title="Auto-numbers 1, 2, 3..."><i class="ic ic-badge"></i> Badge</button>
+    <button class="annotator-tool-btn" id="tool-badge" title="Auto-numbers"><i class="ic ic-badge"></i> Badge</button>
     <button class="annotator-tool-btn" id="tool-crop" style="color: #008060;" title="Select Export Area"><i class="ic ic-crop"></i> Crop</button>
-    <button class="annotator-tool-btn" id="tool-clear" style="color: #e77674;" title="Clear Canvas"><i class="ic ic-trash"></i></button>
     
+    <div style="width: 1px; height: 24px; background: #454f59; margin: 0 4px;"></div>
+    
+    <button class="annotator-tool-btn" id="tool-load-tpl" title="Load Template"><i class="ic ic-upload"></i></button>
+    <button class="annotator-tool-btn" id="tool-save-tpl" title="Save as Template"><i class="ic ic-download"></i></button>
+    <button class="annotator-tool-btn" id="tool-clear" style="color: #e77674;" title="Clear Canvas"><i class="ic ic-trash"></i></button>
+
     <div style="width: 1px; height: 24px; background: #454f59; margin: 0 4px;"></div>
     
     <div id="dynamic-settings" style="display: flex; align-items: center; gap: 10px;">
       <span id="settings-label" class="annotator-label" style="color: #008060; margin-right: 2px;">FRAME</span>
       
+      <div style="display: none; align-items: center; gap: 6px; background: rgba(0, 128, 96, 0.1); padding: 4px 6px; border-radius: 6px; border: 1px solid rgba(0, 128, 96, 0.3);" id="translation-container">
+        <i class="ic ic-translate" style="color: #008060;"></i>
+        <select id="prop-translate-lang" class="annotator-input" style="width: 90px; padding: 2px 4px;">
+           <option value="es">Spanish</option>
+           <option value="fr">French</option>
+           <option value="de">German</option>
+           <option value="it">Italian</option>
+           <option value="pt">Portuguese</option>
+           <option value="en">English</option>
+        </select>
+        <button class="annotator-btn-secondary" id="btn-translate" style="padding: 3px 8px; font-size: 11px;">Translate</button>
+      </div>
+
+      <div style="display: none; align-items: center; gap: 6px;" id="tooltip-pos-container" title="Arrow Position">
+        <span class="annotator-label">Arrow</span>
+        <select id="prop-tooltip-pos" class="annotator-input" style="width: 75px;"><option value="top">Top</option><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option></select>
+      </div>
+
       <div style="display: flex; align-items: center; gap: 6px;" id="text-color-container" title="Text Color">
         <span class="annotator-label">Text</span>
         <input type="color" id="prop-text-color" class="annotator-color-picker">
@@ -241,7 +392,6 @@ function initProAnnotator() {
   `;
   document.documentElement.appendChild(toolbar);
 
-  // --- 4. Geometry Fix ---
   canvas.on('object:scaling', function(e) {
     const obj = e.target;
     if (['box', 'redact', 'spotlight', 'crop'].includes(obj.annotatorType)) {
@@ -249,13 +399,11 @@ function initProAnnotator() {
     }
   });
 
-  // --- 5. Tool Actions ---
+  // --- 4. Tool Actions ---
   const centerLeft = window.innerWidth / 2;
   const centerTop = window.innerHeight / 2;
 
-  document.getElementById('tool-clear').addEventListener('click', () => {
-    canvas.clear(); badgeCount = 1;
-  });
+  document.getElementById('tool-clear').addEventListener('click', () => { canvas.clear(); badgeCount = 1; });
 
   document.getElementById('tool-box').addEventListener('click', () => {
     const s = window.annotatorAppState.box;
@@ -278,15 +426,34 @@ function initProAnnotator() {
     canvas.add(text); canvas.setActiveObject(text);
   });
 
-  document.getElementById('tool-tooltip').addEventListener('click', () => {
-    const s = window.annotatorAppState.tooltip;
-    const tooltip = new AnnotatorText('Tooltip instruction...', {
-      left: centerLeft - 100, top: centerTop, fontFamily: '-apple-system, sans-serif', fill: s.textColor,
-      backgroundColor: hexToRgba(s.fill, s.fillOpacity), annotatorBorderColor: s.border, annotatorBorderWidth: s.borderWidth,
-      annotatorBorderDash: s.style === 'dashed' ? [6,6] : null, fontSize: 15, customPadding: 12, rx: s.radius, showArrow: true, cornerColor: '#008060', transparentCorners: false, width: 200,
-      annotatorType: 'tooltip', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity, annotatorBorder: s.border, annotatorBorderWidth: s.borderWidth, annotatorTextColor: s.textColor
+  const tooltipBtn = document.getElementById('tool-tooltip');
+  const tooltipSubmenu = document.getElementById('tooltip-submenu');
+
+  tooltipBtn.addEventListener('click', () => {
+    tooltipSubmenu.style.display = tooltipSubmenu.style.display === 'none' ? 'flex' : 'none';
+  });
+
+  document.querySelectorAll('.tooltip-opt').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const arrowPos = e.target.getAttribute('data-pos');
+      tooltipSubmenu.style.display = 'none'; 
+
+      const s = window.annotatorAppState.tooltip;
+      s.arrowPosition = arrowPos; 
+      
+      const tooltip = new AnnotatorText('Tooltip instruction...', {
+        left: centerLeft - 100, top: centerTop, fontFamily: '-apple-system, sans-serif', fill: s.textColor,
+        backgroundColor: hexToRgba(s.fill, s.fillOpacity), annotatorBorderColor: s.border, annotatorBorderWidth: s.borderWidth,
+        annotatorBorderDash: s.style === 'dashed' ? [6,6] : null, fontSize: 15, customPadding: 12, rx: s.radius, showArrow: true, 
+        arrowPosition: arrowPos, cornerColor: '#008060', transparentCorners: false, width: 200,
+        annotatorType: 'tooltip', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity, annotatorBorder: s.border, annotatorBorderWidth: s.borderWidth, annotatorTextColor: s.textColor
+      });
+      canvas.add(tooltip); canvas.setActiveObject(tooltip);
     });
-    canvas.add(tooltip); canvas.setActiveObject(tooltip);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('tooltip-wrapper').contains(e.target)) { tooltipSubmenu.style.display = 'none'; }
   });
 
   document.getElementById('tool-arrow').addEventListener('click', () => {
@@ -314,9 +481,7 @@ function initProAnnotator() {
       strokeUniform: true, strokeDashArray: s.style === 'dashed' ? [6,6] : null, width: 200, height: 100, rx: s.radius, ry: s.radius, cornerColor: '#008060', transparentCorners: false,
       annotatorType: 'spotlight', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity, annotatorBorder: s.border, annotatorBorderWidth: s.borderWidth
     });
-    canvas.add(spotlight); 
-    spotlight.sendToBack(); 
-    canvas.setActiveObject(spotlight);
+    canvas.add(spotlight); spotlight.sendToBack(); canvas.setActiveObject(spotlight);
   });
 
   document.getElementById('tool-badge').addEventListener('click', () => {
@@ -327,27 +492,98 @@ function initProAnnotator() {
       fontSize: 18, fontWeight: 'bold', customPadding: 8, cornerColor: '#008060', transparentCorners: false,
       annotatorType: 'badge', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity, annotatorBorder: s.border, annotatorBorderWidth: s.borderWidth, annotatorTextColor: s.textColor
     });
-    canvas.add(badge); canvas.setActiveObject(badge);
-    badgeCount++; 
+    canvas.add(badge); canvas.setActiveObject(badge); badgeCount++; 
   });
 
   document.getElementById('tool-crop').addEventListener('click', () => {
     let existingCrop = canvas.getObjects().find(o => o.annotatorType === 'crop');
-    if (existingCrop) {
-      canvas.setActiveObject(existingCrop); return; 
-    }
+    if (existingCrop) { canvas.setActiveObject(existingCrop); return; }
     const cropBox = new fabric.Rect({
-      left: centerLeft - 250, top: centerTop - 150, width: 500, height: 300,
-      fill: 'transparent', stroke: '#008060', strokeWidth: 3, strokeDashArray: [8,8],
-      strokeUniform: true, cornerColor: '#008060', transparentCorners: false,
-      annotatorType: 'crop'
+      left: centerLeft - 250, top: centerTop - 150, width: 500, height: 300, fill: 'transparent', stroke: '#008060', strokeWidth: 3, strokeDashArray: [8,8],
+      strokeUniform: true, cornerColor: '#008060', transparentCorners: false, annotatorType: 'crop'
     });
     canvas.add(cropBox); canvas.setActiveObject(cropBox);
   });
 
-  // --- 6. Dynamic Properties UI Logic ---
+  // --- TEMPLATE SAVE / LOAD ---
+  const customPropertiesToExport = [
+    'annotatorType', 'annotatorBaseColor', 'annotatorOpacity', 'annotatorBorder', 'annotatorBorderWidth', 
+    'annotatorTextColor', 'annotatorBorderDash', 'customPadding', 'arrowSize', 'arrowPosition', 'showArrow', 'annotatorFill', 'rx', 'ry'
+  ];
+
+  document.getElementById('tool-save-tpl').addEventListener('click', () => {
+    const json = canvas.toJSON(customPropertiesToExport);
+    json.globalFrame = window.annotatorAppState.globalFrame;
+    const blob = new Blob([JSON.stringify(json)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'annotator-template.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('tool-load-tpl').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (f) => {
+        try {
+          const json = JSON.parse(f.target.result);
+          if (json.globalFrame) {
+            window.annotatorAppState.globalFrame = json.globalFrame;
+            document.getElementById('prop-border-color').value = json.globalFrame.borderColor;
+            document.getElementById('prop-border-width').value = json.globalFrame.borderWidth;
+            document.getElementById('prop-radius').value = json.globalFrame.radius;
+          }
+          canvas.loadFromJSON(json, () => {
+            canvas.renderAll();
+          });
+        } catch(err) {
+          console.error("Template load error:", err);
+          alert("Invalid template file. See console for details.");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  });
+
+  // --- AI TRANSLATOR ---
+  document.getElementById('btn-translate').addEventListener('click', async () => {
+    const obj = canvas.getActiveObject();
+    if (!obj || !obj.text) return;
+    
+    const targetLang = document.getElementById('prop-translate-lang').value;
+    const originalText = obj.text;
+    const btn = document.getElementById('btn-translate');
+    
+    try {
+      btn.innerText = '...';
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(originalText)}`);
+      const data = await res.json();
+      const translatedText = data[0].map(item => item[0]).join('');
+      
+      obj.set('text', translatedText);
+      canvas.renderAll();
+      btn.innerText = 'Translate';
+    } catch(e) {
+      console.error(e);
+      alert('Translation failed. Check your internet connection.');
+      btn.innerText = 'Translate';
+    }
+  });
+
+  // --- 5. Dynamic Properties UI Logic ---
   const settingsMenu = document.getElementById('dynamic-settings');
   const settingsLabel = document.getElementById('settings-label');
+  const translationContainer = document.getElementById('translation-container');
+  const tooltipPosContainer = document.getElementById('tooltip-pos-container');
+  const tooltipPosInput = document.getElementById('prop-tooltip-pos');
   const textColorContainer = document.getElementById('text-color-container');
   const textColorInput = document.getElementById('prop-text-color');
   const fillContainer = document.getElementById('fill-container');
@@ -365,7 +601,7 @@ function initProAnnotator() {
     
     if (!obj) {
       settingsLabel.innerText = 'PAGE FRAME';
-      fillContainer.style.display = 'none'; textColorContainer.style.display = 'none'; styleInput.style.display = 'none';
+      fillContainer.style.display = 'none'; textColorContainer.style.display = 'none'; styleInput.style.display = 'none'; tooltipPosContainer.style.display = 'none'; translationContainer.style.display = 'none';
       borderContainer.style.display = 'flex'; radiusContainer.style.display = 'flex';
       
       const gs = window.annotatorAppState.globalFrame;
@@ -379,7 +615,7 @@ function initProAnnotator() {
     settingsLabel.innerText = typeLabel;
 
     if (obj.annotatorType === 'crop') {
-      fillContainer.style.display = 'none'; textColorContainer.style.display = 'none'; styleInput.style.display = 'none';
+      fillContainer.style.display = 'none'; textColorContainer.style.display = 'none'; styleInput.style.display = 'none'; tooltipPosContainer.style.display = 'none'; translationContainer.style.display = 'none';
       borderContainer.style.display = 'none'; radiusContainer.style.display = 'none';
       return;
     }
@@ -391,8 +627,16 @@ function initProAnnotator() {
 
     if (['text', 'tooltip', 'badge'].includes(obj.annotatorType)) {
       textColorContainer.style.display = 'flex'; textColorInput.value = obj.annotatorTextColor || '#ffffff';
+      translationContainer.style.display = 'flex'; 
     } else {
       textColorContainer.style.display = 'none';
+      translationContainer.style.display = 'none'; 
+    }
+
+    if (obj.annotatorType === 'tooltip') {
+      tooltipPosContainer.style.display = 'flex'; tooltipPosInput.value = obj.arrowPosition || 'bottom';
+    } else {
+      tooltipPosContainer.style.display = 'none';
     }
 
     if (obj.annotatorType === 'arrow') {
@@ -424,6 +668,7 @@ function initProAnnotator() {
     if(window.annotatorAppState[type]) {
       window.annotatorAppState[type].fill = obj.annotatorBaseColor; window.annotatorAppState[type].opacity = obj.annotatorOpacity; 
       if (['text', 'tooltip', 'badge'].includes(type)) window.annotatorAppState[type].textColor = obj.annotatorTextColor;
+      if (type === 'tooltip') window.annotatorAppState[type].arrowPosition = obj.arrowPosition;
       if (type !== 'arrow') {
         window.annotatorAppState[type].border = obj.annotatorBorder; window.annotatorAppState[type].borderWidth = parseInt(borderWidth.value) || 0; window.annotatorAppState[type].style = styleInput.value;
       }
@@ -451,12 +696,23 @@ function initProAnnotator() {
   };
 
   textColorInput.addEventListener('input', applyVisualChanges); fillColor.addEventListener('input', applyVisualChanges); fillOp.addEventListener('input', applyVisualChanges); borderColor.addEventListener('input', applyVisualChanges); borderWidth.addEventListener('input', applyVisualChanges);
+  
+  tooltipPosInput.addEventListener('change', (e) => {
+    const obj = canvas.getActiveObject(); 
+    if (obj && obj.annotatorType === 'tooltip') {
+      obj.set('arrowPosition', e.target.value);
+      applySettingsToMemory(obj); 
+      canvas.renderAll();
+    }
+  });
+
   styleInput.addEventListener('change', (e) => {
     const obj = canvas.getActiveObject(); if (!obj || obj.annotatorType === 'arrow' || obj.annotatorType === 'crop') return;
     const dash = e.target.value === 'dashed' ? [6, 6] : null;
     if (['box', 'redact', 'spotlight'].includes(obj.annotatorType)) obj.set('strokeDashArray', dash); else obj.set('annotatorBorderDash', dash); 
     applySettingsToMemory(obj); canvas.renderAll();
   });
+  
   radiusInput.addEventListener('input', (e) => {
     const obj = canvas.getActiveObject(); if (!obj) { applyVisualChanges(); return; }
     if (obj.annotatorType === 'arrow' || obj.annotatorType === 'badge' || obj.annotatorType === 'crop') return;
@@ -465,7 +721,7 @@ function initProAnnotator() {
     applySettingsToMemory(obj); canvas.renderAll();
   });
 
-  // --- 7. IMAGE EXPORT PROCESSOR ---
+  // --- 6. IMAGE EXPORT PROCESSOR ---
   const processImage = (dataUrl, actionType, cropCoords) => {
     const gs = window.annotatorAppState.globalFrame;
     const scale = window.devicePixelRatio || 1; 
@@ -511,7 +767,6 @@ function initProAnnotator() {
       }
 
       if (actionType === 'download') {
-        // BYPASS IFRAME RESTRICTIONS: Send data back to the Background Script
         chrome.runtime.sendMessage({ 
             action: "downloadProcessedImage", 
             dataUrl: exportCanvas.toDataURL('image/png') 
@@ -536,7 +791,7 @@ function initProAnnotator() {
     img.src = dataUrl;
   };
 
-  // --- 8. Save, Copy, and Exit Actions ---
+  // --- 7. Save, Copy, and Exit Actions ---
   document.getElementById('tool-exit').addEventListener('click', () => {
     document.getElementById('annotator-canvas-container')?.remove(); document.getElementById('annotator-toolbar')?.remove(); document.body.style.overflow = ''; window.isProAnnotatorActive = false;
   });
@@ -578,3 +833,33 @@ function initProAnnotator() {
     }
   });
 }
+
+chrome.action.onClicked.addListener(async (tab) => {
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id }, 
+    files: ["fabric.min.js"]
+  });
+
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id }, 
+    files: ["annotator.js"]
+  });
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "takeScreenshot") {
+    chrome.tabs.captureVisibleTab(null, { format: "png" }, (dataUrl) => {
+      sendResponse({ success: true, dataUrl: dataUrl });
+    });
+    return true; 
+  }
+  if (request.action === "downloadProcessedImage") {
+    chrome.downloads.download({
+      url: request.dataUrl,
+      filename: "annotator-pro-screenshot.png",
+      saveAs: true 
+    });
+    sendResponse({ success: true });
+    return true;
+  }
+});
