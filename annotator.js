@@ -136,6 +136,14 @@ function initProAnnotator() {
     #dynamic-settings::-webkit-scrollbar { height: 6px; }
     #dynamic-settings::-webkit-scrollbar-track { background: transparent; }
     #dynamic-settings::-webkit-scrollbar-thumb { background: #454f59; border-radius: 3px; }
+
+    /* Clickable numeric steppers */
+    .annotator-stepper { display: inline-flex; align-items: stretch; height: 24px; }
+    .annotator-step { width: 20px; border: 1px solid #454f59; background: #31373d; color: #ffffff; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0; user-select: none; }
+    .annotator-step:hover { background: #454f59; }
+    .annotator-step:first-child { border-radius: 4px 0 0 4px; border-right: none; }
+    .annotator-step:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+    .annotator-input.annotator-num { width: 34px; border-radius: 0; }
   `;
   document.head.appendChild(style);
 
@@ -399,7 +407,7 @@ function initProAnnotator() {
       </div>
       <div style="display: none; align-items: center; gap: 6px;" id="fontsize-container" title="Font Size">
         <span class="annotator-label">Size</span>
-        <input type="number" id="prop-fontsize" min="8" max="120" class="annotator-input" style="width: 46px;" title="Font size — type or scroll">
+        <span class="annotator-stepper"><button type="button" class="annotator-step" data-target="prop-fontsize" data-dir="-1" tabindex="-1">−</button><input type="number" id="prop-fontsize" min="8" max="120" class="annotator-input annotator-num" title="Font size — type, scroll, or use −/+"><button type="button" class="annotator-step" data-target="prop-fontsize" data-dir="1" tabindex="-1">+</button></span>
       </div>
       <div style="display: flex; align-items: center; gap: 6px;" id="fill-container" title="Body fill color and opacity">
         <span class="annotator-label">Fill</span>
@@ -411,12 +419,12 @@ function initProAnnotator() {
       <div style="display: flex; align-items: center; gap: 6px;" id="border-container" title="Border / Stroke">
         <span class="annotator-label">Border</span>
         <input type="color" id="prop-border-color" class="annotator-color-picker">
-        <input type="number" id="prop-border-width" min="0" max="20" class="annotator-input" style="width: 40px;" title="Border width — type or scroll">
+        <span class="annotator-stepper"><button type="button" class="annotator-step" data-target="prop-border-width" data-dir="-1" tabindex="-1">−</button><input type="number" id="prop-border-width" min="0" max="20" class="annotator-input annotator-num" title="Border width — type, scroll, or use −/+"><button type="button" class="annotator-step" data-target="prop-border-width" data-dir="1" tabindex="-1">+</button></span>
       </div>
       <select id="prop-style" class="annotator-input" style="width: 70px;"><option value="solid">Solid</option><option value="dashed">Dashed</option></select>
       <div style="display: flex; align-items: center; gap: 6px;" id="radius-container">
         <span class="annotator-label">Radius</span>
-        <input type="number" id="prop-radius" min="0" max="50" class="annotator-input" style="width: 40px;" title="Corner radius — type or scroll">
+        <span class="annotator-stepper"><button type="button" class="annotator-step" data-target="prop-radius" data-dir="-1" tabindex="-1">−</button><input type="number" id="prop-radius" min="0" max="50" class="annotator-input annotator-num" title="Corner radius — type, scroll, or use −/+"><button type="button" class="annotator-step" data-target="prop-radius" data-dir="1" tabindex="-1">+</button></span>
       </div>
       <div style="display: none; align-items: center; gap: 6px;" id="tooltip-pos-container" title="Arrow Position">
         <span class="annotator-label">Arrow</span>
@@ -469,7 +477,7 @@ function initProAnnotator() {
   adjustToolbarScale();
 
 
-  canvas.on('object:scaling', function(e) {
+  canvas.on('object:modified', function(e) {
     const obj = e.target;
     if (['box', 'redact', 'spotlight', 'crop'].includes(obj.annotatorType)) {
       obj.set({ width: obj.width * obj.scaleX, height: obj.height * obj.scaleY, scaleX: 1, scaleY: 1 });
@@ -761,6 +769,21 @@ function initProAnnotator() {
   };
   [borderWidth, radiusInput, fontSizeInput].forEach(attachWheelStepper);
 
+  // Clickable +/- steppers on the numeric fields.
+  document.getElementById('annotator-toolbar').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('.annotator-step');
+    if (!btn) return;
+    const input = document.getElementById(btn.dataset.target);
+    if (!input) return;
+    const step = parseFloat(input.step) || 1;
+    const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
+    const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+    let val = (parseFloat(input.value) || 0) + step * parseInt(btn.dataset.dir, 10);
+    val = Math.min(max, Math.max(min, val));
+    input.value = val;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
   const updateSettingsUI = (obj) => {
     settingsMenu.style.display = 'flex';
     
@@ -825,6 +848,64 @@ function initProAnnotator() {
   canvas.on('selection:cleared', () => updateSettingsUI(null));
   
   updateSettingsUI(null);
+
+  // --- Floating per-object actions (Duplicate / Delete) ---
+  const objActions = document.createElement('div');
+  objActions.id = 'annotator-obj-actions';
+  objActions.style.cssText = 'position: fixed; display: none; gap: 4px; z-index: 2147483647; background: #202223; border: 1px solid #454f59; border-radius: 8px; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.35);';
+  objActions.innerHTML = `
+    <button class="annotator-tool-btn" id="obj-duplicate" title="Duplicate" style="padding: 6px;"><i class="ic ic-copy"></i></button>
+    <button class="annotator-tool-btn" id="obj-delete" title="Delete" style="padding: 6px; color: #e77674;"><i class="ic ic-trash"></i></button>
+  `;
+  document.documentElement.appendChild(objActions);
+
+  const hideObjActions = () => { objActions.style.display = 'none'; };
+
+  const positionObjActions = () => {
+    const obj = canvas.getActiveObject();
+    if (!obj) { hideObjActions(); return; }
+    document.getElementById('obj-duplicate').style.display = (obj.annotatorType === 'crop') ? 'none' : 'flex';
+    objActions.style.display = 'flex';
+    const r = obj.getBoundingRect(true, true);
+    const w = objActions.offsetWidth || 72;
+    let top = r.top - 44;
+    if (top < 4) top = r.top + r.height + 8;
+    let left = r.left + r.width - w;
+    if (left < 4) left = 4;
+    if (left + w > window.innerWidth - 4) left = window.innerWidth - 4 - w;
+    objActions.style.top = top + 'px';
+    objActions.style.left = left + 'px';
+  };
+
+  document.getElementById('obj-delete').addEventListener('click', () => {
+    const objs = canvas.getActiveObjects();
+    if (!objs.length) return;
+    canvas.discardActiveObject();
+    objs.forEach(o => canvas.remove(o));
+    canvas.requestRenderAll();
+    hideObjActions();
+  });
+
+  document.getElementById('obj-duplicate').addEventListener('click', () => {
+    const obj = canvas.getActiveObject();
+    if (!obj || obj.annotatorType === 'crop') return;
+    obj.clone((cloned) => {
+      cloned.set({ left: obj.left + 20, top: obj.top + 20 });
+      if (cloned.annotatorType === 'badge') { cloned.set('text', badgeCount.toString()); badgeCount++; }
+      canvas.add(cloned);
+      canvas.setActiveObject(cloned);
+      canvas.requestRenderAll();
+      positionObjActions();
+    }, customPropertiesToExport);
+  });
+
+  canvas.on('selection:created', positionObjActions);
+  canvas.on('selection:updated', positionObjActions);
+  canvas.on('selection:cleared', hideObjActions);
+  canvas.on('object:moving', positionObjActions);
+  canvas.on('object:scaling', positionObjActions);
+  canvas.on('object:rotating', positionObjActions);
+  canvas.on('object:modified', positionObjActions);
 
   const applySettingsToMemory = (obj) => {
     if (!obj) {
@@ -982,6 +1063,7 @@ function initProAnnotator() {
     document.getElementById('annotator-canvas-container')?.remove();
     document.getElementById('annotator-toolbar')?.remove();
     document.getElementById('annotator-injected-styles')?.remove();
+    document.getElementById('annotator-obj-actions')?.remove();
     document.body.style.overflow = originalBodyOverflow;
     window.isProAnnotatorActive = false;
   }
@@ -1021,6 +1103,9 @@ function initProAnnotator() {
   document.getElementById('tool-redo').addEventListener('click', redo);
 
   const handleKeydown = (e) => {
+    // Ignore shortcuts while the user is typing in a toolbar field (number inputs, selects, etc.)
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
     if (e.key === 'Backspace' || e.key === 'Delete') {
       const activeObjects = canvas.getActiveObjects();
       if (activeObjects.length && !activeObjects[0].isEditing) { canvas.discardActiveObject(); activeObjects.forEach(obj => canvas.remove(obj)); }
