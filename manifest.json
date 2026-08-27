@@ -1,12 +1,24 @@
 {
     "manifest_version": 3,
     "name": "Annotator Pro",
-    "version": "2.0",
+    "version": "2.1",
     "description": "Professional canvas-based screenshot and annotation tool.",
     "permissions": ["activeTab", "scripting", "downloads", "storage"],
-    "host_permissions": ["<all_urls>"],
+    "host_permissions": ["https://translate.googleapis.com/*"],
+    "icons": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
     "action": {
-      "default_title": "Start Annotating"
+      "default_title": "Start Annotating",
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
     },
     "background": {
       "service_worker": "background.js"

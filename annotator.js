@@ -10,6 +10,8 @@ if (!window.isProAnnotatorActive) {
     redact: { fill: '#202223', fillOpacity: 1, border: '#000000', borderWidth: 0, radius: 4, style: 'solid' },
     badge: { fill: '#005bd3', fillOpacity: 1, border: '#ffffff', borderWidth: 0, style: 'solid', textColor: '#ffffff' },
     spotlight: { fill: '#000000', fillOpacity: 0.6, border: '#005bd3', borderWidth: 2, radius: 6, style: 'solid' },
+    ellipse: { fill: '#005bd3', fillOpacity: 0, border: '#005bd3', borderWidth: 3, radius: 0, style: 'solid' },
+    line: { fill: '#005bd3', fillOpacity: 1 },
     globalFrame: { borderColor: '#454f59', borderWidth: 0, radius: 12 }
   };
 
@@ -27,6 +29,7 @@ if (!window.isProAnnotatorActive) {
 }
 
 function initProAnnotator() {
+  const originalBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
   let badgeCount = 1;
 
@@ -42,6 +45,7 @@ function initProAnnotator() {
 
   // --- 1. Inject Styles with CSS Armor and CSS Masks ---
   const style = document.createElement('style');
+  style.id = 'annotator-injected-styles';
   style.innerHTML = `
     /* CSS ARMOR */
     #annotator-canvas-container canvas {
@@ -71,6 +75,10 @@ function initProAnnotator() {
     .ic-upload { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'%3E%3C/path%3E%3Cpolyline points='17 8 12 3 7 8'%3E%3C/polyline%3E%3Cline x1='12' y1='3' x2='12' y2='15'%3E%3C/line%3E%3C/svg%3E"); }
     .ic-translate { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8l6 6'%3E%3C/path%3E%3Cpath d='M4 14l6-6 2-3'%3E%3C/path%3E%3Cpath d='M2 5h12'%3E%3C/path%3E%3Cpath d='M7 2h1'%3E%3C/path%3E%3Cpath d='M22 22l-5-10-5 10'%3E%3C/path%3E%3Cpath d='M14 18h6'%3E%3C/path%3E%3C/svg%3E"); }
     .ic-chevron { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+    .ic-ellipse { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cellipse cx='12' cy='12' rx='10' ry='7'%3E%3C/ellipse%3E%3C/svg%3E"); }
+    .ic-line { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cline x1='4' y1='20' x2='20' y2='4'%3E%3C/line%3E%3C/svg%3E"); }
+    .ic-undo { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='1 4 1 10 7 10'%3E%3C/polyline%3E%3Cpath d='M3.51 15a9 9 0 1 0 2.13-9.36L1 10'%3E%3C/path%3E%3C/svg%3E"); }
+    .ic-redo { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='23 4 23 10 17 10'%3E%3C/polyline%3E%3Cpath d='M20.49 15a9 9 0 1 1-2.13-9.36L23 10'%3E%3C/path%3E%3C/svg%3E"); }
 
     /* DROPDOWN UI STYLES */
     .annotator-dropdown-container { position: relative; display: flex; align-items: center; }
@@ -108,6 +116,26 @@ function initProAnnotator() {
     .annotator-color-picker::-webkit-color-swatch { border: 1px solid #454f59; border-radius: 4px; }
     
     .annotator-label { font-family: -apple-system, sans-serif; font-size: 11px; color: #a6acb2; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Consistent select styling (closed control; the open list is OS-native) */
+    select.annotator-input {
+      -webkit-appearance: none; -moz-appearance: none; appearance: none;
+      padding-right: 22px; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6acb2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 6px center; background-size: 11px;
+    }
+    select.annotator-input option { background: #202223 !important; color: #ffffff !important; }
+
+    /* Remove cramped native number spinners (use typing / mouse-wheel / arrow keys) */
+    .annotator-input[type=number]::-webkit-outer-spin-button,
+    .annotator-input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none !important; margin: 0 !important; }
+    .annotator-input[type=number] { -moz-appearance: textfield; text-align: center; }
+
+    /* Thin horizontal scrollbar for the scrolling settings region */
+    #dynamic-settings { scrollbar-width: thin; scrollbar-color: #454f59 transparent; }
+    #dynamic-settings::-webkit-scrollbar { height: 6px; }
+    #dynamic-settings::-webkit-scrollbar-track { background: transparent; }
+    #dynamic-settings::-webkit-scrollbar-thumb { background: #454f59; border-radius: 3px; }
   `;
   document.head.appendChild(style);
 
@@ -330,7 +358,7 @@ function initProAnnotator() {
 
   const toolbar = document.createElement('div');
   toolbar.id = 'annotator-toolbar';
-  toolbar.style.cssText = `position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); transform-origin: bottom center; z-index: 2147483647; background: #202223; padding: 12px 16px; border-radius: 12px; box-shadow: 0 16px 32px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; border: 1px solid #454f59; flex-wrap: nowrap;`;
+  toolbar.style.cssText = `position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); transform-origin: bottom center; z-index: 2147483647; background: #202223; padding: 12px 16px; border-radius: 12px; box-shadow: 0 16px 32px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; border: 1px solid #454f59; flex-wrap: nowrap; max-width: calc(100vw - 24px);`;
 
   toolbar.innerHTML = `
     <div class="annotator-dropdown-container">
@@ -340,6 +368,8 @@ function initProAnnotator() {
         <button class="annotator-tool-btn" id="tool-text"><i class="ic ic-text"></i> Text</button>
         <button class="annotator-tool-btn" id="tool-tooltip"><i class="ic ic-tooltip"></i> Tooltip</button>
         <button class="annotator-tool-btn" id="tool-arrow"><i class="ic ic-arrow"></i> Arrow</button>
+        <button class="annotator-tool-btn" id="tool-line"><i class="ic ic-line"></i> Line</button>
+        <button class="annotator-tool-btn" id="tool-ellipse"><i class="ic ic-ellipse"></i> Ellipse</button>
         <button class="annotator-tool-btn" id="tool-redact"><i class="ic ic-redact"></i> Redact</button>
         <button class="annotator-tool-btn" id="tool-spotlight"><i class="ic ic-spotlight"></i> Focus</button>
         <button class="annotator-tool-btn" id="tool-badge"><i class="ic ic-badge"></i> Badge</button>
@@ -358,9 +388,40 @@ function initProAnnotator() {
 
     <div style="width: 1px; height: 24px; background: #454f59; margin: 0 4px;"></div>
     
-    <div id="dynamic-settings" style="display: flex; align-items: center; gap: 10px;">
-      <span id="settings-label" class="annotator-label" style="color: #008060; margin-right: 2px;">FRAME</span>
+    <div id="dynamic-settings" style="display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px;">
+      <span id="settings-label" class="annotator-label" style="color: #008060; margin-right: 2px;">PAGE FRAME</span>
       
+
+
+      <div style="display: flex; align-items: center; gap: 6px;" id="text-color-container" title="Text Color">
+        <span class="annotator-label">Text</span>
+        <input type="color" id="prop-text-color" class="annotator-color-picker">
+      </div>
+      <div style="display: none; align-items: center; gap: 6px;" id="fontsize-container" title="Font Size">
+        <span class="annotator-label">Size</span>
+        <input type="number" id="prop-fontsize" min="8" max="120" class="annotator-input" style="width: 46px;" title="Font size — type or scroll">
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;" id="fill-container" title="Body fill color and opacity">
+        <span class="annotator-label">Fill</span>
+        <input type="color" id="prop-fill-color" class="annotator-color-picker">
+        <span class="annotator-label" style="font-size: 10px;">Opacity</span>
+        <input type="range" id="prop-fill-opacity" min="0" max="1" step="0.05" title="Fill opacity" style="width: 48px; cursor: pointer; accent-color: #008060;">
+        <span id="prop-fill-opacity-val" class="annotator-label" style="width: 30px; text-align: right; color: #ffffff;">100%</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;" id="border-container" title="Border / Stroke">
+        <span class="annotator-label">Border</span>
+        <input type="color" id="prop-border-color" class="annotator-color-picker">
+        <input type="number" id="prop-border-width" min="0" max="20" class="annotator-input" style="width: 40px;" title="Border width — type or scroll">
+      </div>
+      <select id="prop-style" class="annotator-input" style="width: 70px;"><option value="solid">Solid</option><option value="dashed">Dashed</option></select>
+      <div style="display: flex; align-items: center; gap: 6px;" id="radius-container">
+        <span class="annotator-label">Radius</span>
+        <input type="number" id="prop-radius" min="0" max="50" class="annotator-input" style="width: 40px;" title="Corner radius — type or scroll">
+      </div>
+      <div style="display: none; align-items: center; gap: 6px;" id="tooltip-pos-container" title="Arrow Position">
+        <span class="annotator-label">Arrow</span>
+        <select id="prop-tooltip-pos" class="annotator-input" style="width: 75px;"><option value="top">Top</option><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option></select>
+      </div>
       <div style="display: none; align-items: center; gap: 6px; background: rgba(0, 128, 96, 0.1); padding: 4px 6px; border-radius: 6px; border: 1px solid rgba(0, 128, 96, 0.3);" id="translation-container">
         <i class="ic ic-translate" style="color: #008060;"></i>
         <select id="prop-translate-lang" class="annotator-input" style="width: 85px; padding: 2px 4px;">
@@ -373,34 +434,11 @@ function initProAnnotator() {
         </select>
         <button class="annotator-btn-secondary" id="btn-translate" style="padding: 3px 8px; font-size: 11px;">Translate</button>
       </div>
-
-      <div style="display: none; align-items: center; gap: 6px;" id="tooltip-pos-container" title="Arrow Position">
-        <span class="annotator-label">Arrow</span>
-        <select id="prop-tooltip-pos" class="annotator-input" style="width: 75px;"><option value="top">Top</option><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option></select>
-      </div>
-
-      <div style="display: flex; align-items: center; gap: 6px;" id="text-color-container" title="Text Color">
-        <span class="annotator-label">Text</span>
-        <input type="color" id="prop-text-color" class="annotator-color-picker">
-      </div>
-      <div style="display: flex; align-items: center; gap: 6px;" id="fill-container" title="Body Fill">
-        <span class="annotator-label">Fill</span>
-        <input type="color" id="prop-fill-color" class="annotator-color-picker">
-        <input type="range" id="prop-fill-opacity" min="0" max="1" step="0.1" style="width: 40px; cursor: pointer; accent-color: #008060;">
-      </div>
-      <div style="display: flex; align-items: center; gap: 6px;" id="border-container" title="Border / Stroke">
-        <span class="annotator-label">Border</span>
-        <input type="color" id="prop-border-color" class="annotator-color-picker">
-        <input type="number" id="prop-border-width" min="0" max="20" class="annotator-input" style="width: 40px;" title="Border Width">
-      </div>
-      <select id="prop-style" class="annotator-input" style="width: 70px;"><option value="solid">Solid</option><option value="dashed">Dashed</option></select>
-      <div style="display: flex; align-items: center; gap: 6px;" id="radius-container">
-        <span class="annotator-label">Radius</span>
-        <input type="number" id="prop-radius" min="0" max="50" class="annotator-input" style="width: 40px;">
-      </div>
       <div style="width: 1px; height: 24px; background: #454f59; margin: 0 4px;"></div>
     </div>
     
+    <button class="annotator-tool-btn" id="tool-undo" title="Undo (Ctrl+Z)"><i class="ic ic-undo"></i></button>
+    <button class="annotator-tool-btn" id="tool-redo" title="Redo (Ctrl+Shift+Z)"><i class="ic ic-redo"></i></button>
     <button class="annotator-btn-cancel" id="tool-exit">Exit</button>
     <button class="annotator-btn-secondary" id="tool-copy">Copy</button>
     <button class="annotator-btn-primary" id="tool-save">Save</button>
@@ -418,7 +456,16 @@ function initProAnnotator() {
     bar.style.transform = `translateX(-50%) scale(${inverseScale})`;
   };
 
-  window.addEventListener('resize', adjustToolbarScale);
+  const handleViewportResize = () => {
+    adjustToolbarScale();
+    // Keep the Fabric canvas matched to the viewport so annotations and crop
+    // coordinates stay aligned with the page after a resize / zoom / devtools toggle.
+    if (canvasElement.width !== window.innerWidth || canvasElement.height !== window.innerHeight) {
+      canvas.setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      canvas.renderAll();
+    }
+  };
+  window.addEventListener('resize', handleViewportResize);
   adjustToolbarScale();
 
 
@@ -426,6 +473,8 @@ function initProAnnotator() {
     const obj = e.target;
     if (['box', 'redact', 'spotlight', 'crop'].includes(obj.annotatorType)) {
       obj.set({ width: obj.width * obj.scaleX, height: obj.height * obj.scaleY, scaleX: 1, scaleY: 1 });
+    } else if (obj.annotatorType === 'ellipse') {
+      obj.set({ rx: obj.rx * obj.scaleX, ry: obj.ry * obj.scaleY, scaleX: 1, scaleY: 1 });
     }
   });
 
@@ -433,7 +482,7 @@ function initProAnnotator() {
   const centerLeft = window.innerWidth / 2;
   const centerTop = window.innerHeight / 2;
 
-  document.getElementById('tool-clear').addEventListener('click', () => { canvas.clear(); badgeCount = 1; });
+  document.getElementById('tool-clear').addEventListener('click', () => { canvas.clear(); badgeCount = 1; saveHistory(); });
 
   document.getElementById('tool-box').addEventListener('click', () => {
     const s = window.annotatorAppState.box;
@@ -474,6 +523,27 @@ function initProAnnotator() {
       stroke: hexToRgba(s.fill, s.fillOpacity), annotatorType: 'arrow', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity
     });
     canvas.add(arrow); canvas.setActiveObject(arrow);
+  });
+
+  document.getElementById('tool-line').addEventListener('click', () => {
+    const s = window.annotatorAppState.line;
+    const line = new fabric.Line([centerLeft - 80, centerTop, centerLeft + 80, centerTop], {
+      stroke: hexToRgba(s.fill, s.fillOpacity), strokeWidth: 4, strokeUniform: true, padding: 10,
+      cornerColor: '#008060', transparentCorners: false,
+      annotatorType: 'line', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity
+    });
+    canvas.add(line); canvas.setActiveObject(line);
+  });
+
+  document.getElementById('tool-ellipse').addEventListener('click', () => {
+    const s = window.annotatorAppState.ellipse;
+    const ellipse = new fabric.Ellipse({
+      left: centerLeft - 90, top: centerTop - 60, rx: 90, ry: 60,
+      fill: hexToRgba(s.fill, s.fillOpacity), stroke: s.border, strokeWidth: s.borderWidth,
+      strokeUniform: true, strokeDashArray: s.style === 'dashed' ? [6,6] : null, cornerColor: '#008060', transparentCorners: false,
+      annotatorType: 'ellipse', annotatorBaseColor: s.fill, annotatorOpacity: s.fillOpacity, annotatorBorder: s.border, annotatorBorderWidth: s.borderWidth
+    });
+    canvas.add(ellipse); canvas.setActiveObject(ellipse);
   });
 
   document.getElementById('tool-redact').addEventListener('click', () => {
@@ -519,9 +589,60 @@ function initProAnnotator() {
 
   // --- TEMPLATE SAVE / LOAD ---
   const customPropertiesToExport = [
-    'annotatorType', 'annotatorBaseColor', 'annotatorOpacity', 'annotatorBorder', 'annotatorBorderWidth', 
-    'annotatorTextColor', 'annotatorBorderDash', 'customPadding', 'arrowSize', 'arrowPosition', 'showArrow', 'annotatorFill', 'rx', 'ry'
+    'annotatorType', 'annotatorBaseColor', 'annotatorOpacity', 'annotatorBorder', 'annotatorBorderWidth',
+    'annotatorTextColor', 'annotatorBorderDash', 'customPadding', 'arrowSize', 'arrowPosition', 'showArrow', 'annotatorFill', 'rx', 'ry', 'fontSize'
   ];
+
+  // --- HISTORY (UNDO / REDO) ---
+  let history = [];
+  let historyIndex = -1;
+  let isRestoring = false;
+  const HISTORY_LIMIT = 60;
+
+  const updateHistoryButtons = () => {
+    const u = document.getElementById('tool-undo');
+    const r = document.getElementById('tool-redo');
+    if (u) u.style.opacity = historyIndex <= 0 ? '0.4' : '1';
+    if (r) r.style.opacity = historyIndex >= history.length - 1 ? '0.4' : '1';
+  };
+
+  const saveHistory = () => {
+    if (isRestoring) return;
+    const snap = JSON.stringify(canvas.toJSON(customPropertiesToExport));
+    if (history[historyIndex] === snap) return; // skip no-op duplicates
+    history = history.slice(0, historyIndex + 1);
+    history.push(snap);
+    if (history.length > HISTORY_LIMIT) history.shift();
+    historyIndex = history.length - 1;
+    updateHistoryButtons();
+  };
+
+  const restoreHistory = (snap) => {
+    isRestoring = true;
+    canvas.loadFromJSON(JSON.parse(snap), () => {
+      canvas.renderAll();
+      isRestoring = false;
+      updateHistoryButtons();
+    });
+  };
+
+  const undo = () => {
+    if (historyIndex <= 0) return;
+    historyIndex--;
+    restoreHistory(history[historyIndex]);
+  };
+
+  const redo = () => {
+    if (historyIndex >= history.length - 1) return;
+    historyIndex++;
+    restoreHistory(history[historyIndex]);
+  };
+
+  canvas.on('object:added', saveHistory);
+  canvas.on('object:modified', saveHistory);
+  canvas.on('object:removed', saveHistory);
+  // Seed with the initial (empty) canvas so the first action can be undone.
+  saveHistory();
 
   document.getElementById('tool-save-tpl').addEventListener('click', () => {
     const json = canvas.toJSON(customPropertiesToExport);
@@ -546,6 +667,10 @@ function initProAnnotator() {
       reader.onload = (f) => {
         try {
           const json = JSON.parse(f.target.result);
+          if (!json || typeof json !== 'object' || !Array.isArray(json.objects)) {
+            alert('This does not look like a valid Annotator Pro template.');
+            return;
+          }
           if (json.globalFrame) {
             window.annotatorAppState.globalFrame = json.globalFrame;
             document.getElementById('prop-border-color').value = json.globalFrame.borderColor;
@@ -553,7 +678,14 @@ function initProAnnotator() {
             document.getElementById('prop-radius').value = json.globalFrame.radius;
           }
           canvas.loadFromJSON(json, () => {
+            // Keep numbered badges sequential after loading a template.
+            let maxBadge = 0;
+            canvas.getObjects().forEach(o => {
+              if (o.annotatorType === 'badge') { const n = parseInt(o.text, 10); if (!isNaN(n) && n > maxBadge) maxBadge = n; }
+            });
+            badgeCount = maxBadge + 1;
             canvas.renderAll();
+            saveHistory();
           });
         } catch(err) {
           console.error("Template load error:", err);
@@ -565,29 +697,28 @@ function initProAnnotator() {
     input.click();
   });
 
-  // --- AI TRANSLATOR ---
-  document.getElementById('btn-translate').addEventListener('click', async () => {
+  // --- TRANSLATOR (proxied through the background worker) ---
+  document.getElementById('btn-translate').addEventListener('click', () => {
     const obj = canvas.getActiveObject();
     if (!obj || !obj.text) return;
-    
+
     const targetLang = document.getElementById('prop-translate-lang').value;
     const originalText = obj.text;
     const btn = document.getElementById('btn-translate');
-    
-    try {
-      btn.innerText = '...';
-      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(originalText)}`);
-      const data = await res.json();
-      const translatedText = data[0].map(item => item[0]).join('');
-      
-      obj.set('text', translatedText);
+    btn.innerText = '...';
+
+    // Routed through the service worker so the request is immune to the host
+    // page's Content-Security-Policy and needs only a single scoped host permission.
+    chrome.runtime.sendMessage({ action: 'translateText', text: originalText, targetLang: targetLang }, (response) => {
+      btn.innerText = 'Translate';
+      if (chrome.runtime.lastError || !response || !response.success) {
+        alert('Translation failed. Check your internet connection and try again.');
+        return;
+      }
+      obj.set('text', response.text);
       canvas.renderAll();
-      btn.innerText = 'Translate';
-    } catch(e) {
-      console.error(e);
-      alert('Translation failed. Check your internet connection.');
-      btn.innerText = 'Translate';
-    }
+      saveHistory();
+    });
   });
 
   // --- 5. Dynamic Properties UI Logic ---
@@ -607,6 +738,28 @@ function initProAnnotator() {
   const styleInput = document.getElementById('prop-style');
   const radiusInput = document.getElementById('prop-radius');
   const radiusContainer = document.getElementById('radius-container');
+  const fontSizeContainer = document.getElementById('fontsize-container');
+  const fontSizeInput = document.getElementById('prop-fontsize');
+  const fillOpVal = document.getElementById('prop-fill-opacity-val');
+
+  const syncOpacityReadout = () => {
+    if (fillOpVal) fillOpVal.textContent = Math.round((parseFloat(fillOp.value) || 0) * 100) + '%';
+  };
+
+  // Number fields have no spinners; scroll the wheel over one to nudge its value.
+  const attachWheelStepper = (input) => {
+    input.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const step = parseFloat(input.step) || 1;
+      const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
+      const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+      let val = (parseFloat(input.value) || 0) + (e.deltaY < 0 ? step : -step);
+      val = Math.min(max, Math.max(min, Math.round(val * 100) / 100));
+      input.value = val;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }, { passive: false });
+  };
+  [borderWidth, radiusInput, fontSizeInput].forEach(attachWheelStepper);
 
   const updateSettingsUI = (obj) => {
     settingsMenu.style.display = 'flex';
@@ -614,7 +767,7 @@ function initProAnnotator() {
     if (!obj) {
       settingsLabel.innerText = 'PAGE FRAME';
       fillContainer.style.display = 'none'; textColorContainer.style.display = 'none'; styleInput.style.display = 'none'; tooltipPosContainer.style.display = 'none'; translationContainer.style.display = 'none';
-      borderContainer.style.display = 'flex'; radiusContainer.style.display = 'flex';
+      borderContainer.style.display = 'flex'; radiusContainer.style.display = 'flex'; fontSizeContainer.style.display = 'none';
       
       const gs = window.annotatorAppState.globalFrame;
       borderColor.value = gs.borderColor || '#454f59'; borderWidth.value = gs.borderWidth || 0; radiusInput.value = gs.radius || 0;
@@ -628,17 +781,20 @@ function initProAnnotator() {
 
     if (obj.annotatorType === 'crop') {
       fillContainer.style.display = 'none'; textColorContainer.style.display = 'none'; styleInput.style.display = 'none'; tooltipPosContainer.style.display = 'none'; translationContainer.style.display = 'none';
-      borderContainer.style.display = 'none'; radiusContainer.style.display = 'none';
+      borderContainer.style.display = 'none'; radiusContainer.style.display = 'none'; fontSizeContainer.style.display = 'none';
       return;
     }
 
     fillColor.value = obj.annotatorBaseColor || '#000000'; fillOp.value = obj.annotatorOpacity !== undefined ? obj.annotatorOpacity : 1;
+    syncOpacityReadout();
     borderColor.value = obj.annotatorBorder || '#000000'; borderWidth.value = obj.annotatorBorderWidth || 0;
     
     fillContainer.style.display = 'flex'; borderContainer.style.display = 'flex'; styleInput.style.display = 'block'; radiusContainer.style.display = 'flex';
+    fillOp.style.display = (obj.annotatorType === 'redact') ? 'none' : ''; fontSizeContainer.style.display = 'none';
 
     if (['text', 'tooltip', 'badge'].includes(obj.annotatorType)) {
       textColorContainer.style.display = 'flex'; textColorInput.value = obj.annotatorTextColor || '#ffffff';
+      fontSizeContainer.style.display = 'flex'; fontSizeInput.value = Math.round(obj.fontSize) || 15;
       translationContainer.style.display = 'flex'; 
     } else {
       textColorContainer.style.display = 'none';
@@ -651,8 +807,10 @@ function initProAnnotator() {
       tooltipPosContainer.style.display = 'none';
     }
 
-    if (obj.annotatorType === 'arrow') {
+    if (['arrow', 'line'].includes(obj.annotatorType)) {
       borderContainer.style.display = 'none'; styleInput.style.display = 'none'; radiusContainer.style.display = 'none';
+    } else if (obj.annotatorType === 'ellipse') {
+      radiusContainer.style.display = 'none'; styleInput.value = obj.strokeDashArray ? 'dashed' : 'solid';
     } else if (obj.annotatorType === 'badge') {
       radiusContainer.style.display = 'none'; styleInput.value = obj.annotatorBorderDash ? 'dashed' : 'solid';
     } else {
@@ -678,13 +836,13 @@ function initProAnnotator() {
     if (type === 'crop') return; 
     
     if(window.annotatorAppState[type]) {
-      window.annotatorAppState[type].fill = obj.annotatorBaseColor; window.annotatorAppState[type].opacity = obj.annotatorOpacity; 
+      window.annotatorAppState[type].fill = obj.annotatorBaseColor; window.annotatorAppState[type].fillOpacity = obj.annotatorOpacity; 
       if (['text', 'tooltip', 'badge'].includes(type)) window.annotatorAppState[type].textColor = obj.annotatorTextColor;
       if (type === 'tooltip') window.annotatorAppState[type].arrowPosition = obj.arrowPosition;
-      if (type !== 'arrow') {
+      if (type !== 'arrow' && type !== 'line') {
         window.annotatorAppState[type].border = obj.annotatorBorder; window.annotatorAppState[type].borderWidth = parseInt(borderWidth.value) || 0; window.annotatorAppState[type].style = styleInput.value;
       }
-      if (type !== 'arrow' && type !== 'badge') window.annotatorAppState[type].radius = parseInt(radiusInput.value) || 0;
+      if (type !== 'arrow' && type !== 'line' && type !== 'badge' && type !== 'ellipse') window.annotatorAppState[type].radius = parseInt(radiusInput.value) || 0;
       saveState();
     }
   };
@@ -694,20 +852,21 @@ function initProAnnotator() {
     if (!obj) { applySettingsToMemory(null); return; }
     if (obj.annotatorType === 'crop') return; 
     
-    const fColor = fillColor.value; const fOp = parseFloat(fillOp.value); const bColor = borderColor.value; const bWidth = parseInt(borderWidth.value) || 0; const tColor = textColorInput.value;
+    const fColor = fillColor.value; let fOp = parseFloat(fillOp.value); if (obj.annotatorType === 'redact') { fOp = 1; fillOp.value = 1; } const bColor = borderColor.value; const bWidth = parseInt(borderWidth.value) || 0; const tColor = textColorInput.value;
     
     obj.annotatorBaseColor = fColor; obj.annotatorOpacity = fOp; obj.annotatorBorder = bColor; obj.annotatorBorderWidth = bWidth;
     const fillRgba = hexToRgba(fColor, fOp);
 
-    if (['box', 'redact', 'spotlight'].includes(obj.annotatorType)) obj.set({ fill: fillRgba, stroke: bColor, strokeWidth: bWidth });
+    if (['box', 'redact', 'spotlight', 'ellipse'].includes(obj.annotatorType)) obj.set({ fill: fillRgba, stroke: bColor, strokeWidth: bWidth });
     else if (obj.annotatorType === 'text' || obj.annotatorType === 'tooltip') { obj.set({ backgroundColor: fillRgba, annotatorBorderColor: bColor, annotatorBorderWidth: bWidth, fill: tColor }); obj.annotatorTextColor = tColor; }
-    else if (obj.annotatorType === 'arrow') obj.set('stroke', fillRgba);
+    else if (['arrow', 'line'].includes(obj.annotatorType)) obj.set('stroke', fillRgba);
     else if (obj.annotatorType === 'badge') { obj.set({ annotatorFill: fillRgba, annotatorBorderColor: bColor, annotatorBorderWidth: bWidth, fill: tColor }); obj.annotatorTextColor = tColor; }
     
     applySettingsToMemory(obj); canvas.renderAll();
   };
 
   textColorInput.addEventListener('input', applyVisualChanges); fillColor.addEventListener('input', applyVisualChanges); fillOp.addEventListener('input', applyVisualChanges); borderColor.addEventListener('input', applyVisualChanges); borderWidth.addEventListener('input', applyVisualChanges);
+  fillOp.addEventListener('input', syncOpacityReadout);
   
   tooltipPosInput.addEventListener('change', (e) => {
     const obj = canvas.getActiveObject(); 
@@ -719,18 +878,30 @@ function initProAnnotator() {
   });
 
   styleInput.addEventListener('change', (e) => {
-    const obj = canvas.getActiveObject(); if (!obj || obj.annotatorType === 'arrow' || obj.annotatorType === 'crop') return;
+    const obj = canvas.getActiveObject(); if (!obj || obj.annotatorType === 'arrow' || obj.annotatorType === 'line' || obj.annotatorType === 'crop') return;
     const dash = e.target.value === 'dashed' ? [6, 6] : null;
-    if (['box', 'redact', 'spotlight'].includes(obj.annotatorType)) obj.set('strokeDashArray', dash); else obj.set('annotatorBorderDash', dash); 
+    if (['box', 'redact', 'spotlight', 'ellipse'].includes(obj.annotatorType)) obj.set('strokeDashArray', dash); else obj.set('annotatorBorderDash', dash); 
     applySettingsToMemory(obj); canvas.renderAll();
   });
   
   radiusInput.addEventListener('input', (e) => {
     const obj = canvas.getActiveObject(); if (!obj) { applyVisualChanges(); return; }
-    if (obj.annotatorType === 'arrow' || obj.annotatorType === 'badge' || obj.annotatorType === 'crop') return;
+    if (['arrow', 'line', 'badge', 'ellipse', 'crop'].includes(obj.annotatorType)) return;
     const val = parseInt(e.target.value, 10) || 0;
     if (['box', 'redact', 'spotlight'].includes(obj.annotatorType)) obj.set({ rx: val, ry: val }); else obj.set('rx', val);
     applySettingsToMemory(obj); canvas.renderAll();
+  });
+
+  fontSizeInput.addEventListener('input', (e) => {
+    const obj = canvas.getActiveObject();
+    if (!obj || !['text', 'tooltip', 'badge'].includes(obj.annotatorType)) return;
+    const val = parseInt(e.target.value, 10);
+    if (isNaN(val) || val < 1) return;
+    obj.set('fontSize', val);
+    if (typeof obj.initDimensions === 'function') obj.initDimensions();
+    obj.setCoords();
+    canvas.renderAll();
+    saveHistory();
   });
 
   // --- 6. IMAGE EXPORT PROCESSOR ---
@@ -804,9 +975,17 @@ function initProAnnotator() {
   };
 
   // --- 7. Save, Copy, and Exit Actions ---
-  document.getElementById('tool-exit').addEventListener('click', () => {
-    document.getElementById('annotator-canvas-container')?.remove(); document.getElementById('annotator-toolbar')?.remove(); document.body.style.overflow = ''; window.isProAnnotatorActive = false; window.removeEventListener('resize', adjustToolbarScale);
-  });
+  function cleanupAnnotator() {
+    window.removeEventListener('resize', handleViewportResize);
+    window.removeEventListener('keydown', handleKeydown);
+    try { canvas.dispose(); } catch (e) { /* canvas already gone */ }
+    document.getElementById('annotator-canvas-container')?.remove();
+    document.getElementById('annotator-toolbar')?.remove();
+    document.getElementById('annotator-injected-styles')?.remove();
+    document.body.style.overflow = originalBodyOverflow;
+    window.isProAnnotatorActive = false;
+  }
+  document.getElementById('tool-exit').addEventListener('click', cleanupAnnotator);
 
   const triggerImageCapture = (actionType) => {
     toolbar.style.display = 'none'; 
@@ -838,40 +1017,19 @@ function initProAnnotator() {
 
   document.getElementById('tool-save').addEventListener('click', () => triggerImageCapture('download'));
   document.getElementById('tool-copy').addEventListener('click', () => triggerImageCapture('copy'));
+  document.getElementById('tool-undo').addEventListener('click', undo);
+  document.getElementById('tool-redo').addEventListener('click', redo);
 
-  window.addEventListener('keydown', (e) => {
+  const handleKeydown = (e) => {
     if (e.key === 'Backspace' || e.key === 'Delete') {
-      const activeObjects = canvas.getActiveObjects(); if (activeObjects.length && !activeObjects[0].isEditing) { canvas.discardActiveObject(); activeObjects.forEach(obj => canvas.remove(obj)); }
+      const activeObjects = canvas.getActiveObjects();
+      if (activeObjects.length && !activeObjects[0].isEditing) { canvas.discardActiveObject(); activeObjects.forEach(obj => canvas.remove(obj)); }
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+      e.preventDefault(); undo();
+    } else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+      e.preventDefault(); redo();
     }
-  });
+  };
+  window.addEventListener('keydown', handleKeydown);
 }
 
-chrome.action.onClicked.addListener(async (tab) => {
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id }, 
-    files: ["fabric.min.js"]
-  });
-
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id }, 
-    files: ["annotator.js"]
-  });
-});
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "takeScreenshot") {
-    chrome.tabs.captureVisibleTab(null, { format: "png" }, (dataUrl) => {
-      sendResponse({ success: true, dataUrl: dataUrl });
-    });
-    return true; 
-  }
-  if (request.action === "downloadProcessedImage") {
-    chrome.downloads.download({
-      url: request.dataUrl,
-      filename: "annotator-pro-screenshot.png",
-      saveAs: true 
-    });
-    sendResponse({ success: true });
-    return true;
-  }
-});
