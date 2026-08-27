@@ -79,6 +79,7 @@ function initProAnnotator() {
     .ic-line { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cline x1='4' y1='20' x2='20' y2='4'%3E%3C/line%3E%3C/svg%3E"); }
     .ic-undo { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='1 4 1 10 7 10'%3E%3C/polyline%3E%3Cpath d='M3.51 15a9 9 0 1 0 2.13-9.36L1 10'%3E%3C/path%3E%3C/svg%3E"); }
     .ic-redo { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='23 4 23 10 17 10'%3E%3C/polyline%3E%3Cpath d='M20.49 15a9 9 0 1 1-2.13-9.36L23 10'%3E%3C/path%3E%3C/svg%3E"); }
+    .ic-dock { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='7 8 12 3 17 8'%3E%3C/polyline%3E%3Cpolyline points='7 16 12 21 17 16'%3E%3C/polyline%3E%3C/svg%3E"); }
 
     /* DROPDOWN UI STYLES */
     .annotator-dropdown-container { position: relative; display: flex; align-items: center; }
@@ -139,11 +140,15 @@ function initProAnnotator() {
 
     /* Clickable numeric steppers */
     .annotator-stepper { display: inline-flex; align-items: stretch; height: 24px; }
-    .annotator-step { width: 20px; border: 1px solid #454f59; background: #31373d; color: #ffffff; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0; user-select: none; }
-    .annotator-step:hover { background: #454f59; }
+    .annotator-step { width: 20px; border: 1px solid #454f59; background: #111213; color: #a6acb2; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0; user-select: none; }
+    .annotator-step:hover { background: #31373d; color: #ffffff; }
     .annotator-step:first-child { border-radius: 4px 0 0 4px; border-right: none; }
     .annotator-step:last-child { border-radius: 0 4px 4px 0; border-left: none; }
     .annotator-input.annotator-num { width: 34px; border-radius: 0; }
+
+    /* When the toolbar is docked at the top, dropdowns open downward */
+    .annotator-dock-top .annotator-dropdown-menu { top: 100%; bottom: auto; margin-top: 8px; margin-bottom: 0; }
+    .annotator-dock-top .annotator-dropdown-menu::after { top: auto; bottom: 100%; }
   `;
   document.head.appendChild(style);
 
@@ -369,6 +374,8 @@ function initProAnnotator() {
   toolbar.style.cssText = `position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); transform-origin: bottom center; z-index: 2147483647; background: #202223; padding: 12px 16px; border-radius: 12px; box-shadow: 0 16px 32px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; border: 1px solid #454f59; flex-wrap: nowrap; max-width: calc(100vw - 24px);`;
 
   toolbar.innerHTML = `
+    <button class="annotator-tool-btn" id="tool-dock" title="Move toolbar to top / bottom"><i class="ic ic-dock"></i></button>
+    <div style="width: 1px; height: 24px; background: #454f59; margin: 0 4px;"></div>
     <div class="annotator-dropdown-container">
       <button class="annotator-tool-btn"><i class="ic ic-box"></i> Insert <i class="ic ic-chevron" style="width:12px; height:12px;"></i></button>
       <div class="annotator-dropdown-menu">
@@ -475,6 +482,30 @@ function initProAnnotator() {
   };
   window.addEventListener('resize', handleViewportResize);
   adjustToolbarScale();
+
+  // --- Dock toggle: snap the toolbar to the bottom or the top of the viewport ---
+  let toolbarDock = 'bottom';
+  const applyDock = (pos) => {
+    const bar = document.getElementById('annotator-toolbar');
+    if (!bar) return;
+    if (pos === 'top') {
+      bar.style.top = '30px'; bar.style.bottom = 'auto'; bar.style.transformOrigin = 'top center';
+      bar.classList.add('annotator-dock-top');
+    } else {
+      bar.style.top = 'auto'; bar.style.bottom = '30px'; bar.style.transformOrigin = 'bottom center';
+      bar.classList.remove('annotator-dock-top');
+    }
+    adjustToolbarScale();
+  };
+  document.getElementById('tool-dock').addEventListener('click', () => {
+    toolbarDock = (toolbarDock === 'top') ? 'bottom' : 'top';
+    applyDock(toolbarDock);
+    chrome.storage.local.set({ annotatorToolbarDock: toolbarDock });
+  });
+  chrome.storage.local.get(['annotatorToolbarDock'], (r) => {
+    toolbarDock = (r && r.annotatorToolbarDock === 'top') ? 'top' : 'bottom';
+    applyDock(toolbarDock);
+  });
 
 
   canvas.on('object:modified', function(e) {
@@ -867,10 +898,17 @@ function initProAnnotator() {
     document.getElementById('obj-duplicate').style.display = (obj.annotatorType === 'crop') ? 'none' : 'flex';
     objActions.style.display = 'flex';
     const r = obj.getBoundingRect(true, true);
+    // Uniform gap for every object type: measure from the selection box —
+    // Fabric's own `padding` (which the custom text/tooltip/badge classes set
+    // to match their painted padding) plus half a corner handle — so the bar
+    // clears the green handles by the same amount regardless of shape.
+    const pad = (obj.padding || 0) + (obj.cornerSize || 13) / 2;
+    const gap = 8;
     const w = objActions.offsetWidth || 72;
-    let top = r.top - 44;
-    if (top < 4) top = r.top + r.height + 8;
-    let left = r.left + r.width - w;
+    const h = objActions.offsetHeight || 36;
+    let top = r.top - pad - gap - h;
+    if (top < 4) top = r.top + r.height + pad + gap;
+    let left = r.left + r.width + pad - w;
     if (left < 4) left = 4;
     if (left + w > window.innerWidth - 4) left = window.innerWidth - 4 - w;
     objActions.style.top = top + 'px';
